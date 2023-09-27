@@ -2,6 +2,15 @@
 
 Code and notes from studying [Building Python Web APIs with FastAPI](https://github.com/PacktPublishing/Building-Python-Web-APIs-with-FastAPI)
 
+To run the project:
+
+```sh
+cd todos
+env/Scripts/activate
+pip install -r requirements.txt
+uvicorn api:app --port 8000 --reload
+```
+
 ## Chapter 1: Getting started
 
 Create directory, create and activate a virtual environment, verify `pip` is installed:
@@ -200,3 +209,79 @@ class TodoItem(BaseModel):
 See:
 
 - [Schema examples](https://fastapi.tiangolo.com/tutorial/schema-extra-example/)
+
+## Chapter 3: Response Models and Error Handling
+
+### Response models
+
+Add model to `model.py`:
+
+```python
+class TodoItem(BaseModel):
+  item: str
+
+class TodoItems(BaseModel):
+  todos: List[TodoItem]
+  model_config = {
+    "json_schema_extra": {
+      "examples": [
+        {
+          "todos": [
+            {
+              "item": "This todo will be retrieved without exposing my ID!"
+            },
+            {
+              "item": "And so is this one."
+            }
+          ]
+        }
+      ]
+    }
+  }
+```
+
+Then change the route in `todo.py`, specify the type of the response will be `response_model=TodoItems`:
+
+```python
+@todo_router.get("/todo", response_model=TodoItems)
+async def retrieve_todos() -> dict:
+  return {"todos": todo_list}
+```
+
+If you get the todos, you will see that the ID is not returned:
+
+```sh
+$ curl -X 'GET'   'http://127.0.0.1:8000/todo'   -H 'accept: application/json'
+{"todos":[{"item":"First Todo is to finish this book!"}]}
+```
+
+### Error handling
+
+In `todo.py` file import `HTTPException, status` from `fastapi` and add exception:
+
+```python
+@todo_router.put("/todo/{todo_id}")
+async def update_todo(todo_data: TodoItem, todo_id: int = Path(..., title="The ID of the todo to be updated")) -> dict:
+...
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Todo with supplied ID doesn't exist",
+    )
+```
+
+```sh
+$ curl -i -X 'GET'   'http://localhost:8000/todo/2'   -H 'accept: application/json'
+HTTP/1.1 404 Not Found
+
+{"detail":"Todo with supplied ID doesn't exist"}
+```
+
+### Override the default HTTP status code
+
+Edit file `todo.py` and set `status_code=201` for the method:
+
+```python
+@todo_router.post("/todo", status_code=201)
+async def add_todo(todo: Todo) -> dict:
+...
+```
