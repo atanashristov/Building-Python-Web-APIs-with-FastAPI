@@ -2,7 +2,17 @@
 
 Code and notes from studying [Building Python Web APIs with FastAPI](https://github.com/PacktPublishing/Building-Python-Web-APIs-with-FastAPI)
 
-To run the project:
+Run the `plannert` project:
+
+```sh
+python.exe -m pip install --upgrade pip
+cd planner
+env/Scripts/activate
+pip install -r requirements.txt
+python main.py
+```
+
+Run the `todos` project:
 
 ```sh
 python.exe -m pip install --upgrade pip
@@ -309,3 +319,185 @@ touch {home,todo}.html
 See:
 
 - [Jinja filters](https://jinja.palletsprojects.com/en/3.0.x/templates/#builtin-filters)
+
+## Chapter 5: Structuring FastAPI Applications
+
+Building an event planner with application structure to look like this:
+
+```sh
+planner/
+  main.py
+  database/
+    __init__.py
+    connection.py
+  routes/
+    __init__.py
+    events.py
+    users.py
+  models/
+    __init__.py
+    events.py
+    users.py
+```
+
+To signup an user:
+
+```sh
+$ curl -i -X 'POST'   'http://127.0.0.1:8000/user/signup'   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d '{
+  "email": "fastapi@packt.com",
+  "password": "Stro0ng!",
+  "username": "FastPackt"
+}'
+HTTP/1.1 200 OK
+date: Sat, 07 Oct 2023 03:35:40 GMT
+server: uvicorn
+content-length: 43
+content-type: application/json
+
+{"message":"User successfully registered!"}
+```
+
+Error signup an user:
+
+```sh
+$ curl -i -X 'POST'   'http://127.0.0.1:8000/user/signup'   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d '{
+  "email": "fastapi@packt.com",
+  "password": "Stro0ng!",
+  "username": "FastPackt"
+}'
+HTTP/1.1 409 Conflict
+date: Sat, 07 Oct 2023 03:36:04 GMT
+server: uvicorn
+content-length: 47
+content-type: application/json
+
+{"detail":"User with supplied username exists"}
+```
+
+To signin an user:
+
+```sh
+$ curl -i -X 'POST'   'http://127.0.0.1:8000/user/signin'   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d '{
+  "email": "fastapi@packt.com",
+  "password": "Stro0ng!"
+}'
+HTTP/1.1 200 OK
+date: Sat, 07 Oct 2023 03:37:17 GMT
+server: uvicorn
+content-length: 41
+content-type: application/json
+
+{"message":"User signed in successfully"}
+```
+
+Error signin user:
+
+```sh
+$ curl -i -X 'POST'   'http://127.0.0.1:8000/user/signin'   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d '{
+  "email": "fastapi12345@packt.com",
+  "password": "Stro0ng!"
+}'
+HTTP/1.1 404 Not Found
+date: Sat, 07 Oct 2023 03:37:53 GMT
+server: uvicorn
+content-length: 32
+content-type: application/json
+
+{"detail":"User does not exist"}
+```
+
+Create event:
+
+```sh
+$ curl -i -X 'POST' 'http://127.0.0.1:8000/event/new' -H 'accept: application/json' -H 'Content-Type: application/json'   -d '{
+  "id": 1,
+  "title": "FastAPI Book Launch",
+  "image": "https://linktomyimage.com/image.png",
+  "description": "We will be discussing the contents of the FastAPI book in this event.Ensure to come with your own copy to win gifts!",
+  "tags": [
+    "python",
+    "fastapi",
+    "book",
+    "launch"
+  ],
+  "location": "Google Meet"
+}'
+HTTP/1.1 200 OK
+date: Sat, 07 Oct 2023 03:46:44 GMT
+server: uvicorn
+content-length: 40
+content-type: application/json
+
+{"message":"Event created successfully"}
+```
+
+Get events:
+
+```sh
+$ curl -i -X 'GET' 'http://127.0.0.1:8000/event/' -H 'accept: application/json'
+HTTP/1.1 200 OK
+date: Sat, 07 Oct 2023 03:47:07 GMT
+server: uvicorn
+content-length: 288
+content-type: application/json
+
+[{"id":1,"title":"FastAPI Book Launch","image":"https://linktomyimage.com/image.png","description":"We will be discussing the contents of the FastAPI book in this event.Ensure to come with your own copy to win gifts!","tags":["python","fastapi","book","launch"],"location":"Google Meet"}]
+```
+
+Get one event by ID:
+
+```sh
+$ curl -i -X 'GET' 'http://127.0.0.1:8000/event/1' -H 'accept: application/json'
+HTTP/1.1 200 OK
+date: Sat, 07 Oct 2023 03:47:43 GMT
+server: uvicorn
+content-length: 286
+content-type: application/json
+
+{"id":1,"title":"FastAPI Book Launch","image":"https://linktomyimage.com/image.png","description":"We will be discussing the contents of the FastAPI book in this event.Ensure to come with your own copy to win gifts!","tags":["python","fastapi","book","launch"],"location":"Google Meet"}
+```
+
+Error get one event by ID:
+
+```sh
+$ curl -i -X 'GET' 'http://127.0.0.1:8000/event/0' -H 'accept: application/json'
+HTTP/1.1 404 Not Found
+date: Sat, 07 Oct 2023 03:48:13 GMT
+server: uvicorn
+content-length: 50
+content-type: application/json
+
+{"detail":"Event with supplied ID does not exist"}
+```
+
+Delete event by ID:
+
+```sh
+$ curl -i -X 'DELETE' \
+  'http://127.0.0.1:8000/event/1' \
+  -H 'accept: application/json'
+HTTP/1.1 200 OK
+date: Sat, 07 Oct 2023 03:49:08 GMT
+server: uvicorn
+content-length: 40
+content-type: application/json
+
+{"message":"Event deleted successfully"}
+```
+
+Error delete event by ID:
+
+```sh
+$ curl -i -X 'DELETE' 'http://127.0.0.1:8000/event/0' -H 'accept: application/json'
+HTTP/1.1 404 Not Found
+date: Sat, 07 Oct 2023 03:49:37 GMT
+server: uvicorn
+content-length: 50
+content-type: application/json
+
+{"detail":"Event with supplied ID does not exist"}
+```
+
+See:
+
+- [Code](https://github.com/PacktPublishing/Building-Python-Web-APIs-with-FastAPI/tree/main/ch05/planner)
