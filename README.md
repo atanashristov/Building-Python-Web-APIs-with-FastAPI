@@ -5,6 +5,7 @@ Code and notes from studying [Building Python Web APIs with FastAPI](https://git
 To run the project:
 
 ```sh
+python.exe -m pip install --upgrade pip
 cd todos
 env/Scripts/activate
 pip install -r requirements.txt
@@ -285,3 +286,26 @@ Edit file `todo.py` and set `status_code=201` for the method:
 async def add_todo(todo: Todo) -> dict:
 ...
 ```
+
+## Chapter 4: Templating in FastAPI
+
+Install `jinja2`:
+
+```sh
+pip install jinja2
+pip install python-multipart
+pip freeze > requirements.txt
+pip install -r requirements.txt
+```
+
+Make templates directory and files:
+
+```sh
+mkdir templates
+cd templates
+touch {home,todo}.html
+```
+
+See:
+
+- [Jinja filters](https://jinja.palletsprojects.com/en/3.0.x/templates/#builtin-filters)
