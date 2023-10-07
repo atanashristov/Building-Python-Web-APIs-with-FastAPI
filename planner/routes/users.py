@@ -1,16 +1,18 @@
-# routes/users.py: This file will handle routing operations such as the registration and signing-in of users.
+from fastapi import APIRouter, HTTPException, Request, status, Depends
+from fastapi.templating import Jinja2Templates
 
-from fastapi import APIRouter, HTTPException, status
-from models.users import UserSignUp, UserSignIn
+from models.users import NewUser, UserSignIn
+
 user_router = APIRouter(
-    tags=["User"]
+    tags=["User"],
 )
 
 users = {}
+templates = Jinja2Templates(directory="templates/")
 
 
 @user_router.post("/signup")
-async def sign_user_up(data: UserSignUp) -> dict:
+async def sign_user_up(request: Request, data: NewUser = Depends(NewUser.as_form)):
     if data.email in users:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -19,23 +21,49 @@ async def sign_user_up(data: UserSignUp) -> dict:
 
     users[data.email] = data
 
-    return {
-        "message": "User successfully registered!"
-    }
+    return templates.TemplateResponse("user.html", {
+        "request": request,
+        "signed_in": True,
+    })
 
 
 @user_router.post("/signin")
-async def sign_user_in(user: UserSignIn) -> dict:
+async def sign_user_in(request: Request, user: UserSignIn = Depends(UserSignIn.as_form)):
     if user.email not in users:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User does not exist"
         )
+
     if users[user.email].password != user.password:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Wrong credential passed"
         )
-    return {
-        "message": "User signed in successfully"
-    }
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "signed_in": True
+        }
+    )
+
+
+@user_router.get("/")
+async def render_login_page(request: Request):
+    return templates.TemplateResponse(
+        "user.html", {
+            "request": request,
+            "sign_in": True
+        }
+    )
+
+
+@user_router.get("/signup")
+async def render_signup_page(request: Request):
+    return templates.TemplateResponse(
+        "user.html", {
+            "request": request,
+            "sign_in": False
+        }
+    )

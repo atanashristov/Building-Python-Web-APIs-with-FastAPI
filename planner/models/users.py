@@ -2,37 +2,55 @@
 
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
+from fastapi import Form
 from models.events import Event
 
 
-class UserSignUp(BaseModel):
+class User(BaseModel):
     email: EmailStr
-    password: str
     username: str
+    events: Optional[List[Event]]
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "email": "fastapi@packt.com",
-                    "password": "strong!!!",
-                    "username": "FastPack",
-                }
-            ]
+    @classmethod
+    def as_form(
+            cls,
+            email: EmailStr = Form(...),
+            username: str = Form(...),
+            password: str = Form(...)
+    ):
+        return cls(email=email, username=username, password=password)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "email": "fastapi@packt.com",
+                "username": "fastapipackt001",
+                "events": [],
+            }
         }
-    }
+
+
+class NewUser(User):
+    password: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "email": "fastapi@packt.com",
+                "password": "Stro0ng!",
+                "username": "FastPackt"
+            }
+        }
 
 
 class UserSignIn(BaseModel):
     email: EmailStr
     password: str
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "email": "fastapi@packt.com",
-                    "username": "strong!!!",
-                }
-            ]
-        }
-    }
+
+    @classmethod
+    def as_form(
+            cls,
+            email: EmailStr = Form(...),
+            password: str = Form(...)
+    ):
+        return cls(email=email, password=password)

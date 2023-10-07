@@ -9,7 +9,8 @@ python.exe -m pip install --upgrade pip
 cd planner
 env/Scripts/activate
 pip install -r requirements.txt
-python main.py
+# python main.py
+uvicorn api:app --port 8000 --reload
 ```
 
 Run the `todos` project:
@@ -340,6 +341,21 @@ planner/
     users.py
 ```
 
+This is how the environment is initialized:
+
+```sh
+python.exe -m pip install --upgrade pip
+pip install virtualenv
+mkdir planner && cd planner
+virtualenv env
+env/Scripts/activate
+pip install fastapi uvicorn "pydantic[email]"
+pip install jinja2 python-multipart
+pip freeze > requirements.txt
+pip install -r requirements.txt
+python3 -m pip list
+```
+
 To signup an user:
 
 ```sh
@@ -501,3 +517,32 @@ content-type: application/json
 See:
 
 - [Code](https://github.com/PacktPublishing/Building-Python-Web-APIs-with-FastAPI/tree/main/ch05/planner)
+
+## Chapter 6: Connecting to a Database
+
+Explains how to connect to a SQL database using SQLModel and a MongoDB database via Beanie.
+
+Add dependencies:
+
+```sh
+cd planner
+env/Scripts/activate # or bash: source env/Scripts/activate
+pip install sqlmodel
+pip freeze > requirements.txt
+pip install -r requirements.txt
+python3 -m pip list
+```
+
+Define SQL model:
+
+```python
+from sqlmodel import Field, SQLModel, Optional
+
+class Event(SQLModel, BaseModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+...
+```
+
+See:
+
+- [pip sqlmodel](https://pypi.org/project/sqlmodel/)
